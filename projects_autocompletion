@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+
+# autocompletion for projects
+_projects() 
+{
+	local PROJECTS_HOME="${HOME}/.projects"
+    local PROJECT_EXT=".project"
+    local commands="init resume save info kill list help version"
+    local commands_w_project="resume save info kill"
+
+    COMPREPLY=()
+	local cur prev words cword
+	_get_comp_words_by_ref -n : cur prev words cword
+ 
+
+
+    if [ "${cword}" -gt "2" ]; then
+    	return 0
+    fi
+    case "${prev}" in
+    	projects)
+			if [ "${cword}" -lt "2" ]; then
+		    	COMPREPLY=( $( compgen -W "${commands}" -- "${cur}" ) )
+		    fi
+	    ;;
+	    resume|save|info|kill)
+    		local projects=$(find ${PROJECTS_HOME} -type f -name *${PROJECT_EXT} \
+               -printf "%f " | sed "s/${PROJECT_EXT}//g")
+    		COMPREPLY=( $( compgen -W "${projects}" -- "${cur}" ) )
+    	;;
+    esac
+    return 0
+}
+complete -F _projects projects
