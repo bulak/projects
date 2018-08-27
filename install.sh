@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # Need to check
-# tmux
-# tmuxp
+# tmux (can use screen instead?)
+# tmuxp (screen alternative?)
+# jrnl (optional?)
+# add_jrnl (not in bashrc, missing file)
 # also project.yaml is missing
 
 
