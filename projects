@@ -30,7 +30,7 @@ LICENSE
 
 # Constants
 DESCR="\"projects\" is a simple shell script that manages tmux based projects"
-VERSION="3.1"
+VERSION="3.2"
 
 PROJECTS_HOME="${HOME}/.projects"
 PROJECT_EXT=".project"
@@ -111,7 +111,7 @@ declare -a all_projects=()
 get_all_projects() {
   local prodat
   read -r -a prodat <<< $(find ${PROJECTS_HOME} -type f \
-    -name *${PROJECT_EXT} -printf "%f %AY-%Am-%Ad\n" \
+    -name *${PROJECT_EXT} -printf "%f %TY-%Tm-%Td\n" \
     | sed "s/${PROJECT_EXT}//g" | sort -k2r | tr '\n' ' ')
   for ((i=0;i<${#prodat[@]};i=i+2)); do
     j=$((i + 1))
@@ -282,14 +282,14 @@ saved state! [y/N] " response
   ;;
   resume)
     if is_set $P_PRESENT && is_set $P_ACTIVE; then
-      touch -a ${cur_project_file} && \
+      touch -m ${cur_project_file} && \
       set_history_and_call_tmux ${cur_project} "${cur_project_path}"
     elif is_set $P_PRESENT && is_set $P_SAVED; then
       echo "Resuming [${cur_project}] using ${cur_project_yaml}. Path is '${cur_project_path}'"
-      touch -a ${cur_project_file} && \
+      touch -m ${cur_project_file} && \
       set_history_and_call_tmuxp ${cur_project} ${cur_project_yaml} "${cur_project_path}"
     elif is_set $P_PRESENT; then
-      touch -a ${cur_project_file} && \
+      touch -m ${cur_project_file} && \
       set_history_and_call_tmuxp ${cur_project} "${DEF_YAML}" "${cur_project_path}"
     elif is_set $P_ACTIVE && is_not_set $P_PRESENT; then
       echo "[${cur_project}] is not present but there is an active tmux\
@@ -303,7 +303,7 @@ to resume to the last saved state - which will also initiate a new project?\
           exit 0
         ;;
         *)
-          protect ${cur_project_file}
+          protect "${cur_project_file}" "${cur_project_path}"
           set_history_and_call_tmuxp ${cur_project} ${cur_project_yaml} "${cur_project_path}"
         ;;
       esac

@@ -58,4 +58,6 @@ precmd_project_shell () {
 }
 preexec_functions+=(precmd_normal_shell)
 [ ! -z "${PROJECT_NAME}" ] && preexec_functions+=(precmd_project_shell)
+
+## This line should be at the end of the .bashrc script
 source ~/.bash-preexec.sh
