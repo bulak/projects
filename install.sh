@@ -145,19 +145,19 @@ case ${multplexer} in
  cp ./project.yaml ~/.tmuxp/;"
   ;;
   screen)
-    install_script="${install_script} cp ./projects_screen ~/.local/bin/projects;"
+    install_script="${install_script} cp ./src/projects_screen ~/.local/bin/projects;"
   ;;
   *)
     echo "Error: Multiplexer selected could be one of following: tmux, screen."
     quit
 esac
 install_script="${install_script} chmod a+x ~/.local/bin/projects;"
-cat bashrc > ${bashrc_file}
+cat ./src/bashrc > ${bashrc_file}
 
 # Is bash-completion requested?
 if contains "${option_str}" "autocompl"; then
-  install_script="${install_script} cp projects_autocompletion ~/.projects_autocompletion.sh;"
-  cat bashrc_autocompletion >> ${bashrc_file}
+  install_script="${install_script} cp ./src/projects_autocompletion ~/.projects_autocompletion.sh;"
+  cat ./src/bashrc_autocompletion >> ${bashrc_file}
 fi
 
 # Is journaling requested?
@@ -166,26 +166,26 @@ if contains "${option_str}" "jrnl"; then
  depends on 'jrnl'; however, I couldn't find it. You can install it by 'pip\
  install [--user] jrnl'. Either re-try installation without 'journaling'\
  or install 'jrnl' first."
- install_script="${install_script} cp add_jrnl.py ~/.local/bin/add_jrnl;\
+ install_script="${install_script} cp ./src/add_jrnl.py ~/.local/bin/add_jrnl;\
  chmod a+x ~/.local/bin/add_jrnl;"
- cat bashrc_journaling >> ${bashrc_file}
+ cat ./src/bashrc_journaling >> ${bashrc_file}
 fi
 
 # Is eternal history for bash requested?
 if contains "${option_str}" "ehist"; then
-  cat bashrc_eternal_history >> ${bashrc_file}
+  cat ./src/bashrc_eternal_history >> ${bashrc_file}
   option_str="${option_str} pre-exec"
 fi
 
 # Is eternal history for projects requested?
 if contains "${option_str}" "phist"; then
-  cat bashrc_project_history >> ${bashrc_file}
+  cat ./src/bashrc_project_history >> ${bashrc_file}
   option_str="${option_str} pre-exec"
 fi
 
 # Is pre-exec required?
 if contains "${option_str}" "pre-exec"; then
-  install_script="${install_script} cp ./ThirdParty/bash-preexec/.bash-preexec.sh ~;"
+  install_script="${install_script} cp ./src/ThirdParty/bash-preexec/.bash-preexec.sh ~;"
   echo "# This should be at the end of the .bashrc script" >> ${bashrc_file}
   echo "source ~/.bash-preexec.sh" >> ${bashrc_file}
 fi
