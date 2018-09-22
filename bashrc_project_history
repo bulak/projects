@@ -1,0 +1,41 @@
+# Eternal history for each PROJECT
+# --------------------------------
+
+project_history_dir="${HOME}/.history"
+[ -d "${project_history_dir}" ] || mkdir -p ${project_history_dir}
+if  [ ! -z "${PROJECT_NAME}" ]; then
+
+  # colored PROJECT history
+  phist () {
+    cat ${project_history_dir}/${PROJECT_NAME}.bash_history | awk 'BEGIN {
+      FS="]"; OFS="]" } {
+          n = index( $3, ";" );
+          subdir = substr( $3, 1, n-1 );
+          cmd = substr( $3, n+1 );
+          print "\033[34m"$1,"\033[33m"$2,"\033[32m"subdir"\033[0m"cmd;}'
+  }
+
+  # sorted PROJECT history by PANE_ID
+  pphist () {
+    phist | sort -t] -k2,2 -k1,1
+  }
+
+  # hnote for PROJECT only
+  pnote () {
+    echo "[$(date +'%Y/%m/%d %H:%M %Z')] [Pane:$TMUX_PANE] ## NOTE ##; $*" >> ${project_history_dir}/${PROJECT_NAME}.bash_history;
+  }
+
+fi
+
+# This is from https://github.com/rcaloras/bash-preexec
+# Super cool function to execute stuff before prompt command execution
+
+precmd_project_shell () {
+  echo "[$(date +'%Y/%m/%d %H:%M %Z')] [Pane:$TMUX_PANE] $PWD; $1" >> ${eternal_history_dir}/${PROJECT_NAME}.bash_history;
+}
+
+[ ! -z "${PROJECT_NAME}" ] && preexec_functions+=(precmd_project_shell)
+
+# End of eternal history for projects
+# -----------------------------------
+

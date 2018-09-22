@@ -1,0 +1,6 @@
+session_name: ${PROJECT_NAME}
+windows:
+  - window_name: Main 
+    panes:
+      - pane
+

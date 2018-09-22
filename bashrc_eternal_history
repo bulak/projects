@@ -1,0 +1,36 @@
+# Eternal history for bash
+# ------------------------
+
+eternal_history_dir="${HOME}/.history"
+[ -d "${eternal_history_dir}" ] || mkdir -p ${eternal_history_dir}
+export ETERNALHISTFILE="${eternal_history_dir}/bash_history-${HOSTNAME}"
+
+hnote () {
+  echo "[$(date +'%Y/%m/%d %H:%M %Z')] ## NOTE ##; $*" >> ${ETERNALHISTFILE}
+}
+
+ehist () {
+  cat ${ETERNALHISTFILE} | awk 'BEGIN {
+    FS="]"; OFS="]" } {
+        n = index( $2, ";" );
+        subdir = substr( $2, 1, n-1 );
+        cmd = substr( $2, n+1 );
+        print "\033[34m"$1,"\033[32m"subdir"\033[0m"cmd;}'
+}
+
+# This is from https://github.com/rcaloras/bash-preexec
+# Super cool function to execute stuff before prompt command execution
+
+precmd_normal_shell () {
+  history -a;
+  if [ ! "$1" = "${__last_cmd}" ]; then
+    echo "[$(date +'%Y/%m/%d %H:%M %Z')] $PWD; $1" >> $ETERNALHISTFILE;
+  fi
+  export __last_cmd="$1"
+}
+
+preexec_functions+=(precmd_normal_shell)
+
+# End of eternal history
+# ----------------------
+

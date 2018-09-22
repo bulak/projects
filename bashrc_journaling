@@ -1,0 +1,2 @@
+# PROJECT journaling
+[ ! -z "${PROJECT_NAME}" ] && alias pj="jrnl ${PROJECT_NAME}"
