@@ -17,5 +17,5 @@ separately for each project with time and full path stamps
 ```bash
 git clone https://github.com/bulak/projects.git
 cd projects
-./install
+./install.sh
 ```
