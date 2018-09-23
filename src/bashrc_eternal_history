@@ -1,3 +1,4 @@
+
 # Eternal history for bash
 # ------------------------
 
@@ -31,6 +32,6 @@ precmd_normal_shell () {
 
 preexec_functions+=(precmd_normal_shell)
 
-# End of eternal history
 # ----------------------
+# End of eternal history
 

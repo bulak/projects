@@ -1,11 +1,16 @@
 #!/bin/bash
 
 # do we have these?
-cmds=( "pip" "screen" "tmux" "tmuxp" "whiptail" "dialog" "flock" "lockfile" "jrnl" )
+cmds=( "pip" "screen" "tmux" "tmuxp" "whiptail" "dialog"
+       "flock" "lockfile" "jrnl" )
 declare -A have_cmd=()
 for cmd in ${cmds[@]}; do
   command -v ${cmd} >/dev/null 2>&1 && have_cmd[${cmd}]=true
 done
+
+# Install path is not optional for now
+install_path=$( systemd-path user-binaries 2>/dev/null )
+[ -z ${install_path} ] && install_path="~/.local/bin"
 
 # exit 0
 # Need to check
@@ -55,21 +60,21 @@ need_this_or_that() {
   if [ "${have_cmd[${1}]}" != true ] && [ "${have_cmd[${2}]}" != true ]; then
     msg="'projects' depends on '${1}' or '${2}'. Installation will\
  continue, however, 'projects' will not work!\n"
-      question=" Do you want to continue?"
-      case ${dialog} in
-        whiptail)
+    question=" Do you want to continue?"
+    case ${dialog} in
+      whiptail)
         whiptail --yesno "${msg}\n${question}" 10 65
       ;;
       dialog)
         dialog --yesno "${msg}\n${question}" 10 65
       ;;
       cli_dialog)
-              yesno "${msg}" "${question}"
-          ;;
-      esac
-      if [ $? -ne 0 ]; then
-        quit
-      fi
+        yesno "${msg}" "${question}"
+      ;;
+    esac
+    if [ $? -ne 0 ]; then
+      quit
+    fi
   fi
 }
 
@@ -141,18 +146,18 @@ case ${multplexer} in
     quit_if_not "tmuxp" "You have selected 'tmux' as the multiplexer to be used\
  with 'projects'. This requires 'tmuxp'; however, I couldn't find it. You can\
  install it by 'pip install [--user] tmuxp'. The installation will terminate."
-    install_script="${install_script} cp ./projects_tmux ~/.local/bin/projects;\
- cp ./project.yaml ~/.tmuxp/;"
+    install_script="${install_script} install ./src/projects_tmux ${install_path}/projects;\
+ cp ./src/project.yaml ~/.tmuxp/;"
   ;;
   screen)
-    install_script="${install_script} cp ./src/projects_screen ~/.local/bin/projects;"
+    install_script="${install_script} install ./src/projects_screen ${install_path}/projects;"
   ;;
   *)
     echo "Error: Multiplexer selected could be one of following: tmux, screen."
     quit
 esac
-install_script="${install_script} chmod a+x ~/.local/bin/projects;"
-cat ./src/bashrc > ${bashrc_file}
+echo -e "\n\n# PROJECTS modifications -- $(date +"%Y-%m-%d")" > ${bashrc_file}
+cat ./src/bashrc >> ${bashrc_file}
 
 # Is bash-completion requested?
 if contains "${option_str}" "autocompl"; then
@@ -166,8 +171,7 @@ if contains "${option_str}" "jrnl"; then
  depends on 'jrnl'; however, I couldn't find it. You can install it by 'pip\
  install [--user] jrnl'. Either re-try installation without 'journaling'\
  or install 'jrnl' first."
- install_script="${install_script} cp ./src/add_jrnl.py ~/.local/bin/add_jrnl;\
- chmod a+x ~/.local/bin/add_jrnl;"
+ install_script="${install_script} install ./src/add_jrnl.py ${install_path}/add_jrnl;"
  cat ./src/bashrc_journaling >> ${bashrc_file}
 fi
 
@@ -185,9 +189,32 @@ fi
 
 # Is pre-exec required?
 if contains "${option_str}" "pre-exec"; then
-  install_script="${install_script} cp ./src/ThirdParty/bash-preexec/.bash-preexec.sh ~;"
+  install_script="${install_script} cp ./ThirdParty/bash-preexec/.bash-preexec.sh ~;"
   echo "# This should be at the end of the .bashrc script" >> ${bashrc_file}
   echo "source ~/.bash-preexec.sh" >> ${bashrc_file}
 fi
+echo -e "\n# END OF PROJECTS modifications -- $(date +"%Y-%m-%d")" >> ${bashrc_file}
+echo "# -----------------------------" >> ${bashrc_file}
 
+# Ask if user prefer us to modify the .bashrc or not
+msg="Part of installation requires modifications to user's .bashrc\
+ file. Necessary changes are stored in '${bashrc_file}'. These can be\
+ appended simply by 'cat ${bashrc_file} >> ~/.bashrc'. Or I can do it\
+ for you. A copy of .bashrc will be kept as '.bashrc.old'\n"
+question=" Do you want me to modify your .bashrc file?"
+case ${dialog} in
+  whiptail)
+    whiptail --yesno "${msg}\n${question}" 15 65
+  ;;
+  dialog)
+    dialog --yesno "${msg}\n${question}" 15 65
+  ;;
+  cli_dialog)
+    yesno "${msg}" "${question}"
+  ;;
+esac
+if [ $? -eq 0 ]; then
+  cp ~/.bashrc ~/.bashrc.old
+  cat ${bashrc_file} >> ~/.bashrc 
+fi
 eval "${install_script}"

@@ -1,3 +1,4 @@
+
 # Eternal history for each PROJECT
 # --------------------------------
 
@@ -36,6 +37,5 @@ precmd_project_shell () {
 
 [ ! -z "${PROJECT_NAME}" ] && preexec_functions+=(precmd_project_shell)
 
-# End of eternal history for projects
 # -----------------------------------
-
+# End of eternal history for projects
