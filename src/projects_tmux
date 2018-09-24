@@ -2,6 +2,16 @@
 
 # projects - tmux based -
 
+# TODO (fir init_layouts)
+#
+# - get rid of 'save' and tmuxp dependency
+# - figure out starting a session with a predefined layout/commands
+# - this is possible for screen - and we already ditched 'save' there
+# - the idea is to have different predefined project layouts to choose from
+# - 'save' is not working well anyways. For our purpopses, saving is not
+#   really useful. Getting the layouts from an interrupted R session does not
+#   help!
+
 :<<'LICENSE'
 MIT License
 
