@@ -12,6 +12,10 @@
 #   really useful. Getting the layouts from an interrupted R session does not
 #   help!
 
+# this works
+#  tmux new-session -s Stupid "tmux source-file ~/session1"
+# where session1 is a conf file with all layouts, commands etc!
+
 :<<'LICENSE'
 MIT License
 

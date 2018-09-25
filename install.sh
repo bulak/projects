@@ -1,5 +1,8 @@
 #!/bin/bash
 
+def_install_path="~/.local/bin"
+def_bashrc_path="~/.bashrc_projects"
+
 # do we have these?
 cmds=( "pip" "screen" "tmux" "tmuxp" "whiptail" "dialog"
        "flock" "lockfile" "jrnl" )
@@ -10,19 +13,9 @@ done
 
 # Install path is not optional for now
 install_path=$( systemd-path user-binaries 2>/dev/null )
-[ -z ${install_path} ] && install_path="~/.local/bin"
+[ -z ${install_path} ] && install_path="${def_install_path}"
 
-# exit 0
-# Need to check
-# tmux (can use screen instead?) (done)
-# tmuxp (screen alternative?) pip install --user tmuxp
-# screen-session ? http://skoneka.github.io/screen-session/index.html (does not work)
-# jrnl (optional?) pip install --user jrnl
-# add_jrnl (not in bashrc, missing file)
-# also project.yaml is missing
-# need lockfile / fallback to flock (done)
-# use whiptail / dialog / radiolist (done)
-
+# helper functions
 quit() {
   echo "Installation of 'projects' is cancelled."
   exit 1
@@ -30,6 +23,8 @@ quit() {
 
 contains() { [ -z "${1##*$2*}" ] && [ -n "$1" ]; }
 
+# set-up which dialog we will use
+# whiptail > dialog > cli_dialog
 if [ "${have_cmd[whiptail]}" = true ]; then
   dialog="whiptail"
 elif [ "${have_cmd[dialog]}" = true ]; then
@@ -37,7 +32,6 @@ elif [ "${have_cmd[dialog]}" = true ]; then
 else
   source cli_dialog.sh && dialog="cli_dialog"
 fi
-
 
 quit_if_not() {
   if [ "${have_cmd[${1}]}" != true ]; then
@@ -106,9 +100,9 @@ multplexer=${opt_str[$((multplexer - 1))]}
 opt_str=( "ehist" "phist" "jrnl" "autocompl" )
 title="Which options should be enabled?"
 options=("1" "Eternal bash history" "on" 
-       "2" "Project bash history" "on" 
-       "3" "Project journaling" "off" 
-       "4" "Autocompletion for 'projects'" "off")
+         "2" "Project bash history" "on" 
+         "3" "Project journaling" "off" 
+         "4" "Autocompletion for 'projects'" "off")
 case ${dialog} in
   whiptail)
     optional=($(whiptail --checklist "${title}" 12 47 4 "${options[@]}" 3>&2 2>&1 1>&3))
@@ -129,18 +123,11 @@ for ((i=0; i<${#optional[@]}; i++)); do
 done
 option_str="${optional[@]}"
 
-# echo "${multplexer}"
-# echo "${optional[@]}"
-
-
-
-# first main part: tmux vs screen
-# tmux will require tmuxp (which can be installed automatically)
-# proejcts_tmux or projects_screen will be copied
-# create a new bash template and fill depending on options
-# at the end user will append it to .bashrc . this is safest
+# Setting up installation string that will be eval at the end
 install_script=""
-bashrc_file="./bashrc_install"
+bashrc_file="./bashrc_temp_preinstall"
+
+# tmux or screen
 case ${multplexer} in
   tmux)
     quit_if_not "tmuxp" "You have selected 'tmux' as the multiplexer to be used\
@@ -158,6 +145,16 @@ case ${multplexer} in
 esac
 echo -e "\n\n# PROJECTS modifications -- $(date +"%Y-%m-%d")" > ${bashrc_file}
 cat ./src/bashrc >> ${bashrc_file}
+
+# Is install path in PATH?
+case :$PATH: in
+  *:${install_path}:*)
+  ;; # do nothing, it's there
+  *)
+    echo "PATH=\"\$PATH:${install_path}\"" >> ${bashrc_file}
+    echo >> ${bashrc_file}
+  ;;
+esac
 
 # Is bash-completion requested?
 if contains "${option_str}" "autocompl"; then
@@ -187,34 +184,39 @@ if contains "${option_str}" "phist"; then
   option_str="${option_str} pre-exec"
 fi
 
-# Is pre-exec required?
-if contains "${option_str}" "pre-exec"; then
-  install_script="${install_script} cp ./ThirdParty/bash-preexec/.bash-preexec.sh ~;"
-  echo "# This should be at the end of the .bashrc script" >> ${bashrc_file}
-  echo "source ~/.bash-preexec.sh" >> ${bashrc_file}
-fi
-echo -e "\n# END OF PROJECTS modifications -- $(date +"%Y-%m-%d")" >> ${bashrc_file}
-echo "# -----------------------------" >> ${bashrc_file}
-
 # Ask if user prefer us to modify the .bashrc or not
-msg="Part of installation requires modifications to user's .bashrc\
- file. Necessary changes are stored in '${bashrc_file}'. These can be\
- appended simply by 'cat ${bashrc_file} >> ~/.bashrc'. Or I can do it\
- for you. A copy of .bashrc will be kept as '.bashrc.old'\n"
+msg="A small bash script needs to be sourced from user's .bashrc file.\n\
+It can be done by executing\n\necho \"source ${def_bashrc_path}\" >> ~/.bashrc\
+\n\nI can do it for you (and keep a copy of .bashrc as .bashrc.old).\n"
 question=" Do you want me to modify your .bashrc file?"
 case ${dialog} in
   whiptail)
-    whiptail --yesno "${msg}\n${question}" 15 65
+    whiptail --yesno "${msg}\n${question}" 15 70
   ;;
   dialog)
-    dialog --yesno "${msg}\n${question}" 15 65
+    dialog --yesno "${msg}\n${question}" 15 70
   ;;
   cli_dialog)
     yesno "${msg}" "${question}"
   ;;
 esac
 if [ $? -eq 0 ]; then
-  cp ~/.bashrc ~/.bashrc.old
-  cat ${bashrc_file} >> ~/.bashrc 
+  install_script="${install_script} cp ~/.bashrc ~/.bashrc.old;\
+ echo \"# This is added by 'projects', remove if redundant\" >> ~/.bashrc;\
+ echo \"source ${def_bashrc_path}\" >> ~/.bashrc;"
 fi
+
+# Is pre-exec required?
+if contains "${option_str}" "pre-exec"; then
+  install_script="${install_script} cp ./ThirdParty/bash-preexec/.bash-preexec.sh ~;"
+  echo -e "\n# This sourcing is necessary for eternal histories" >> ${bashrc_file}
+  echo "source ~/.bash-preexec.sh" >> ${bashrc_file}
+fi
+
+# finalization
+install_script="${install_script} mv ${bashrc_file} ${def_bashrc_path};"
+echo -e "\n# END OF PROJECTS modifications -- $(date +"%Y-%m-%d")" >> ${bashrc_file}
+echo "# -----------------------------" >> ${bashrc_file}
+
+# installation
 eval "${install_script}"
