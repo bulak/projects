@@ -4,13 +4,19 @@
 
 # TODO (fir init_layouts)
 #
-# - get rid of 'save' and tmuxp dependency
+# - get rid of 'save' and tmuxp dependency :OK:
 # - figure out starting a session with a predefined layout/commands
 # - this is possible for screen - and we already ditched 'save' there
 # - the idea is to have different predefined project layouts to choose from
 # - 'save' is not working well anyways. For our purpopses, saving is not
 #   really useful. Getting the layouts from an interrupted R session does not
 #   help!
+
+# for example:
+# projects init project_name [project_type]
+# user@host:~/some/dir/to/cool_stuff$ project init cool_stuff sequencing
+# if project_type is not provided then look for layout named default
+# if not present just call tmux otherwise call with default layout
 
 :<<'LICENSE'
 MIT License
@@ -42,13 +48,11 @@ VERSION="3.3"
 
 PROJECTS_HOME="${HOME}/.projects"
 PROJECT_EXT=".project"
-TMUXP_HOME="${HOME}/.tmuxp"
-DEF_YAML="${TMUXP_HOME}/project.yaml"
-HEADER_FORMAT='%-20s%-12s%-10s%-8s%-7s\n'
-ROW_FORMAT='\e[1m%-20s\e[0m%-12s%-10s%8s\e[1m%7s\e[0m\n'
+HEADER_FORMAT='%-20s%-12s%-10s%-7s\n'
+ROW_FORMAT='\e[1m%-20s\e[0m%-12s%-10s\e[1m%7s\e[0m\n'
 P_PRESENT=1
 P_ACTIVE=2
-P_SAVED=4
+# P_FUTURE_ATTR=4
 
 # lock command present
 if command -v lockfile >/dev/null 2>&1; then
@@ -143,36 +147,16 @@ get_all_projects() {
 }
 
 
-# This great yaml parser is from
-# https://gist.github.com/pkuczynski/8665367#file-parse_yaml-sh
-parse_yaml() {
-   local prefix=$2
-   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
-   sed -ne "s|^\($s\)\($w\)$s:$s\"\(.*\)\"$s\$|\1$fs\2$fs\3|p" \
-        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
-   awk -F$fs '{
-      indent = length($1)/2;
-      vname[indent] = $2;
-      for (i in vname) {if (i > indent) {delete vname[i]}}
-      if (length($3) > 0) {
-         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
-      }
-   }'
-}
-
 set_project_info() {
   local project_name=$1
   [ -z ${project_name} ] && return 1
 
   cur_project_base="${PROJECTS_HOME}/${project_name}"
-  cur_project_yaml="${TMUXP_HOME}/${project_name}.yaml"
   cur_project_file="${cur_project_base}${PROJECT_EXT}"
 
   # Bit flags
   bits=0
   [ -f "${cur_project_file}" ] && bits=$((bits + P_PRESENT))
-  [ -f "${cur_project_yaml}" ] && bits=$((bits + P_SAVED))
   tmux has-session -t =${project_name} >/dev/null 2>&1 && bits=$((bits + P_ACTIVE))
   cur_info=$bits
 
@@ -184,10 +168,6 @@ set_project_info() {
   # Figure out project home dir
   if test "${cur_project_info[0]+isset}"; then
     cur_project_path="${cur_project_info[0]}"
-  elif ((cur_info & P_SAVED)); then
-    eval $(parse_yaml ${cur_project_yaml} "project_config_")
-    [ -n "${project_config_windows_start_directory}" ] &&
-      cur_project_path="${project_config_windows_start_directory}"
   fi
   [ -z "${cur_project_path}" ] && cur_project_path=$(pwd)
 
@@ -197,42 +177,37 @@ set_project_info() {
   else
     date_created[$project_name]="Unknown"
   fi
-  # echo Path is "${cur_project_path}"
-  # echo Info is "${cur_project_info[@]}"
-  # echo Number is "${#cur_project_info[@]}"
   return 0
 }
 
 print_headers() {
-    printf ${HEADER_FORMAT} "Project" "Created" "Accessed" " Saved" " Active"
-    printf ${HEADER_FORMAT} "-------" "-------" "--------" " -----" " ------"
+    printf ${HEADER_FORMAT} "Project" "Created" "Accessed" " Active"
+    printf ${HEADER_FORMAT} "-------" "-------" "--------" " ------"
 }
 
 print_project_info() {
   local project_name=$1
   #local checkmark="...\xe2\x9c\x93"
   local checkmark="*"
-  local is_saved
   local is_active
   [ -z ${project_name} ] && { echo "Need a PROJECT_NAME"; return 1; }
   set_project_info "${project_name}"
   local is_created="${date_created[${project_name}]}"
   local is_accessed="${date_accessed[${project_name}]}"
   [ -z ${is_created} ] && is_created=" --"
-  is_set "${P_SAVED}" && is_saved="${checkmark}   " || is_saved=" "
   is_set "${P_ACTIVE}" && is_active="${checkmark}  " || is_active=" "
-  printf ${ROW_FORMAT} "${project_name}" "${is_created}" "${is_accessed}" "${is_saved}" "${is_active}"
+  printf ${ROW_FORMAT} "${project_name}" "${is_created}" "${is_accessed}" "${is_active}"
 }
 
-set_history_and_call_tmuxp() {
+set_history_and_new_tmux() {
   export PROJECT_NAME=$1
   export PROMPT_COMMAND='echo -ne "\033]0;[ ${PROJECT_NAME} ]@${HOSTNAME}\007"'
-  [ -n "$3" ] && cd "$3" && export PROJECT_HOME="$3"
-  tmuxp load $2
+  [ -n "$2" ] && cd "$2" && export PROJECT_HOME="$2"
+  tmux new-session -s $2
   exit 0
 }
 
-set_history_and_call_tmux() {
+set_history_and_attach_tmux() {
   export PROJECT_NAME=$1
   export PROJECT_HOME="$2"
   export PROMPT_COMMAND='echo -ne "\033]0;[ ${PROJECT_NAME} ]@${HOSTNAME}\007"'
@@ -263,9 +238,9 @@ fi
 # Execute the command
 case "${cur_command}" in
   init)
-    if is_set $P_PRESENT && (is_set $P_ACTIVE || is_set $P_SAVED); then
-      echo "[${cur_project}] was already created. Either 'kill' this project or\
- 'resume' to attach to tmux session or to load the last saved state"
+    if is_set $P_PRESENT && is_set $P_ACTIVE; then
+      echo "[${cur_project}] was already created and is active. Either 'kill' this\
+ project or 'resume' to attach to tmux session"
       exit 0
     elif is_set $P_PRESENT; then
       echo "[${cur_project}] was already created. However; it is neither active\
@@ -282,62 +257,26 @@ case "${cur_command}" in
         ;;
         *)
           protect "${cur_project_file}" "${cur_project_path}"
-          set_history_and_call_tmux ${cur_project} "${cur_project_path}"
-        ;;
-      esac
-    elif is_set $P_SAVED && is_not_set $P_PRESENT; then
-      echo "[${cur_project}] is not present but saved, which can be\
-'resume'd to the last saved state."
-      read -r -p "Do you want to initiate a new project? This will delete the old\
-saved state! [y/N] " response
-      case $response in
-        [yY][eE][sS]|[yY])
-          rm ${cur_project_yaml}
-          set_project_info "${cur_project}"
-          protect "${cur_project_file}" "${cur_project_path}"
-          set_history_and_call_tmuxp ${cur_project} "${DEF_YAML}" "${cur_project_path}"
-        ;;
-        *)
-          exit 0
+          set_history_and_attach_tmux ${cur_project} "${cur_project_path}"
         ;;
       esac
     else
       protect "${cur_project_file}" "${cur_project_path}"
-      set_history_and_call_tmuxp ${cur_project} "${DEF_YAML}" "${cur_project_path}"
+      set_history_and_new_tmux ${cur_project} "${cur_project_path}"
     fi
-  ;;
-  save)
-    tmuxp freeze ${cur_project}
   ;;
   resume)
     if is_set $P_PRESENT && is_set $P_ACTIVE; then
       touch -m ${cur_project_file} && \
-      set_history_and_call_tmux ${cur_project} "${cur_project_path}"
-    elif is_set $P_PRESENT && is_set $P_SAVED; then
-      echo "Resuming [${cur_project}] using ${cur_project_yaml}. Path is '${cur_project_path}'"
-      touch -m ${cur_project_file} && \
-      set_history_and_call_tmuxp ${cur_project} ${cur_project_yaml} "${cur_project_path}"
+      set_history_and_attach_tmux ${cur_project} "${cur_project_path}"
     elif is_set $P_PRESENT; then
       touch -m ${cur_project_file} && \
-      set_history_and_call_tmuxp ${cur_project} "${DEF_YAML}" "${cur_project_path}"
+      set_history_and_new_tmux ${cur_project} "${cur_project_path}"
     elif is_set $P_ACTIVE && is_not_set $P_PRESENT; then
       echo "[${cur_project}] is not present but there is an active tmux\
  session. Use 'init' to initiate a new project from that session"
-    elif is_set $P_SAVED && is_not_set $P_PRESENT; then
-      read -r -p "[${cur_project}] is not present but saved. Do you want to\
-to resume to the last saved state - which will also initiate a new project?\
- [Y\n] " response
-      case $response in
-        [nN][oO]|[nN])
-          exit 0
-        ;;
-        *)
-          protect "${cur_project_file}" "${cur_project_path}"
-          set_history_and_call_tmuxp ${cur_project} ${cur_project_yaml} "${cur_project_path}"
-        ;;
-      esac
     else
-      echo "[${cur_project}] is not active and not saved. Can't resume, try 'init'"
+      echo "[${cur_project}] is not present or active. Can't resume, try 'init'"
       exit 1
     fi
   ;;
@@ -354,7 +293,6 @@ to resume to the last saved state - which will also initiate a new project?\
     case $response in
       [yY][eE][sS]|[yY])
         rm -f ${cur_project_file}
-        rm -f ${cur_project_yaml}
         tmux kill-session -t ${cur_project}
       ;;
       *)
@@ -378,7 +316,7 @@ to resume to the last saved state - which will also initiate a new project?\
     exit 0
   ;;
   *)
-    echo "Command can be one of [init, save, resume, kill, list, info, help, version]"
+    echo "Command can be one of [init, resume, kill, list, info, help, version]"
     usage
   ;;
 esac
