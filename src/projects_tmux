@@ -80,7 +80,6 @@ Usage: $0 COMMAND [PROJECT_NAME]
 
 COMMAND        Mandatory. Has to be one of:
                init   : Initiates a new project with PROJECT_NAME
-               save   : Saves the last state of the project PROJECT_NAME
                resume : Resumes the project PROJECT_NAME
                info   : Prints information about the project PROJECT_NAME
                kill   : Kills the project PROJECT NAME
@@ -203,7 +202,11 @@ set_history_and_new_tmux() {
   export PROJECT_NAME=$1
   export PROMPT_COMMAND='echo -ne "\033]0;[ ${PROJECT_NAME} ]@${HOSTNAME}\007"'
   [ -n "$2" ] && cd "$2" && export PROJECT_HOME="$2"
-  tmux new-session -s $2
+  if [ -z "$3" ]; then
+    tmux new-session -s $1
+  else
+    tmux new-session -s $1 "tmux source-file ${3}"
+  fi
   exit 0
 }
 
@@ -218,6 +221,7 @@ set_history_and_attach_tmux() {
 # Set up variables
 cur_command=$(get_single_arg "${1}")
 cur_project=$(get_single_arg "${2}")
+cur_layout=$(get_single_arg "${3}")
 
 [ -z "${cur_command}" ] && usage
 [ -d ${PROJECTS_HOME} ] || mkdir -p ${PROJECTS_HOME}
@@ -226,14 +230,19 @@ if [ -n "${cur_project}" ]; then
   project_lock="${cur_project_base}.lock"
   if [ ${lock} = "lockfile" ]; then
     lockfile -r 0 ${project_lock} || {
-      echo "This project is locked by another 'screen' process"; exit 1; }
+      echo "This project is locked by another 'tmux' process"; exit 1; }
   else
     exec 300>${project_lock}
     flock -n 300 || {
-      echo "This project is locked by another 'screen' process"; exit 1; }
+      echo "This project is locked by another 'tmux' process"; exit 1; }
   fi
   trap "remove_lock ${project_lock}; exit 1" 0 1 2 3 13 15
 fi
+
+# Set-up layout file
+[ -z "${cur_layout}" ] && cur_layout="default"
+cur_layout_file="${PROJECTS_HOME}/${cur_layout}.tmux.layout"
+[ ! -f "${cur_layout_file}" ] && cur_layout_file=""
 
 # Execute the command
 case "${cur_command}" in
@@ -256,13 +265,14 @@ case "${cur_command}" in
           exit 0
         ;;
         *)
+          echo "we should be here"
           protect "${cur_project_file}" "${cur_project_path}"
           set_history_and_attach_tmux ${cur_project} "${cur_project_path}"
         ;;
       esac
     else
       protect "${cur_project_file}" "${cur_project_path}"
-      set_history_and_new_tmux ${cur_project} "${cur_project_path}"
+      set_history_and_new_tmux ${cur_project} "${cur_project_path}" "${cur_layout_file}"
     fi
   ;;
   resume)
