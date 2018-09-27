@@ -5,8 +5,8 @@ _projects()
 {
 	local PROJECTS_HOME="${HOME}/.projects"
     local PROJECT_EXT=".project"
-    local commands="init resume save info kill list help version"
-    local commands_w_project="resume save info kill"
+    local commands="init resume info kill list help version"
+    local commands_w_project="resume info kill"
 
     COMPREPLY=()
 	local cur prev words cword
@@ -23,7 +23,7 @@ _projects()
 		    	COMPREPLY=( $( compgen -W "${commands}" -- "${cur}" ) )
 		    fi
 	    ;;
-	    resume|save|info|kill)
+	    resume|info|kill)
     		local projects=$(find ${PROJECTS_HOME} -type f -name *${PROJECT_EXT} \
                -printf "%f " | sed "s/${PROJECT_EXT}//g")
     		COMPREPLY=( $( compgen -W "${projects}" -- "${cur}" ) )
