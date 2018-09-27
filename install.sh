@@ -133,11 +133,11 @@ case ${multplexer} in
     quit_if_not "tmuxp" "You have selected 'tmux' as the multiplexer to be used\
  with 'projects'. This requires 'tmuxp'; however, I couldn't find it. You can\
  install it by 'pip install [--user] tmuxp'. The installation will terminate."
-    install_script="${install_script} install ./src/projects_tmux ${install_path}/projects;\
+    install_script="${install_script} install -D ./src/projects_tmux ${install_path}/projects;\
  cp ./src/project.yaml ~/.tmuxp/;"
   ;;
   screen)
-    install_script="${install_script} install ./src/projects_screen ${install_path}/projects;"
+    install_script="${install_script} install -D ./src/projects_screen ${install_path}/projects;"
   ;;
   *)
     echo "Error: Multiplexer selected could be one of following: tmux, screen."
@@ -168,7 +168,7 @@ if contains "${option_str}" "jrnl"; then
  depends on 'jrnl'; however, I couldn't find it. You can install it by 'pip\
  install [--user] jrnl'. Either re-try installation without 'journaling'\
  or install 'jrnl' first."
- install_script="${install_script} install ./src/add_jrnl.py ${install_path}/add_jrnl;"
+ install_script="${install_script} install -D ./src/add_jrnl.py ${install_path}/add_jrnl;"
  cat ./src/bashrc_journaling >> ${bashrc_file}
 fi
 
