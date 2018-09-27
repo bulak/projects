@@ -48,6 +48,8 @@ VERSION="3.3"
 
 PROJECTS_HOME="${HOME}/.projects"
 PROJECT_EXT=".project"
+LAYOUT_HOME="${PROJECTS_HOME}/layouts"
+LAYOUT_EXT=".tmux.layout"
 HEADER_FORMAT='%-20s%-12s%-10s%-7s\n'
 ROW_FORMAT='\e[1m%-20s\e[0m%-12s%-10s\e[1m%7s\e[0m\n'
 P_PRESENT=1
@@ -241,7 +243,7 @@ fi
 
 # Set-up layout file
 [ -z "${cur_layout}" ] && cur_layout="default"
-cur_layout_file="${PROJECTS_HOME}/${cur_layout}.tmux.layout"
+cur_layout_file="${LAYOUT_HOME}/${cur_layout}${LAYOUT_EXT}"
 [ ! -f "${cur_layout_file}" ] && cur_layout_file=""
 
 # Execute the command
@@ -265,7 +267,6 @@ case "${cur_command}" in
           exit 0
         ;;
         *)
-          echo "we should be here"
           protect "${cur_project_file}" "${cur_project_path}"
           set_history_and_attach_tmux ${cur_project} "${cur_project_path}"
         ;;
@@ -292,23 +293,29 @@ case "${cur_command}" in
   ;;
   info)
     get_all_projects
-    print_headers
+    [ -n "${cur_project}" ] && print_headers
     print_project_info "${cur_project}"
     exit 0
   ;;
   kill)
-    read -r -p "Are you sure that you want to kill [${cur_project}]? This\
+    if is_set $P_PRESENT; then
+      read -r -p "Are you sure that you want to kill [${cur_project}]? This\
  will remove all locks, saved states; only history files will remain.\
  [y/N] " response
-    case $response in
-      [yY][eE][sS]|[yY])
-        rm -f ${cur_project_file}
-        tmux kill-session -t ${cur_project}
-      ;;
-      *)
-        exit 0
-      ;;
-    esac
+      case $response in
+        [yY][eE][sS]|[yY])
+          rm -f ${cur_project_file}
+          if is_set $P_ACTIVE; then
+            tmux kill-session -t ${cur_project}
+          fi
+        ;;
+        *)
+          exit 0
+        ;;
+      esac
+    else
+      echo "[${cur_project}] does not exist. Nothing to kill for now."
+    fi
   ;;
   list)
     get_all_projects
