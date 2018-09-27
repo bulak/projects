@@ -28,14 +28,17 @@ LICENSE
 
 # Constants
 DESCR="\"projects\" is a simple shell script that manages screen based projects"
-VERSION="3.3"
+VERSION="3.4"
 
 PROJECTS_HOME="${HOME}/.projects"
 PROJECT_EXT=".project"
+LAYOUT_HOME="${PROJECTS_HOME}/layouts"
+LAYOUT_EXT=".screen.layout"
 HEADER_FORMAT='%-20s%-12s%-10s%-7s\n'
 ROW_FORMAT='\e[1m%-20s\e[0m%-12s%-10s\e[1m%7s\e[0m\n'
 P_PRESENT=1
 P_ACTIVE=2
+# P_FUTURE_ATTR=4
 
 # lock command present
 if command -v lockfile >/dev/null 2>&1; then
@@ -59,10 +62,13 @@ $(version)
 
 $DESCR
 
-Usage: $0 COMMAND [PROJECT_NAME]
+Usage: $0 COMMAND [PROJECT_NAME] [LAYOUT]
 
 COMMAND        Mandatory. Has to be one of:
-               init   : Initiates a new project with PROJECT_NAME
+               init   : Initiates a new project with PROJECT_NAME. If LAYOUT is
+                        given, it will be used to load a layout configuration.
+                        If LAYOUT is empty, a 'default' layout config will be
+                        used, provided that it exists. 
                resume : Resumes the project PROJECT_NAME
                info   : Prints information about the project PROJECT_NAME
                kill   : Kills the project PROJECT NAME
@@ -71,6 +77,9 @@ COMMAND        Mandatory. Has to be one of:
                version: Prints the version of the program
 
 PROJECT_NAME   Name of the project, spaces are NOT allowed.
+LAYOUT         Name of a layout configuration, spaces are NOT allowed. The
+               full path of the correspoding configuration file will be
+               ${LAYOUT_HOME}/<LAYOUT>${LAYOUT_EXT}
 
 EOF
   exit 1
@@ -185,7 +194,11 @@ set_history_and_new_screen() {
   export PROJECT_NAME=$1
   export PROMPT_COMMAND='echo -ne "\033]0;[ ${PROJECT_NAME} ]@${HOSTNAME}\007"'
   [ -n "$2" ] && cd "$2" && export PROJECT_HOME="$2"
-  screen -S $1
+  if [ -z "$3" ]; then
+    screen -S $1
+  else
+    screen -S $1 -c "$3"
+  fi
   exit 0
 }
 
@@ -200,6 +213,7 @@ set_history_and_attach_screen() {
 # Set up variables
 cur_command=$(get_single_arg "${1}")
 cur_project=$(get_single_arg "${2}")
+cur_layout=$(get_single_arg "${3}")
 
 [ -z "${cur_command}" ] && usage
 [ -d ${PROJECTS_HOME} ] || mkdir -p ${PROJECTS_HOME}
@@ -217,6 +231,11 @@ if [ -n "${cur_project}" ]; then
   trap "remove_lock ${project_lock}; exit 1" 0 1 2 3 13 15
 fi
 
+# Set-up layout file
+[ -z "${cur_layout}" ] && cur_layout="default"
+cur_layout_file="${LAYOUT_HOME}/${cur_layout}${LAYOUT_EXT}"
+[ ! -f "${cur_layout_file}" ] && cur_layout_file=""
+
 # Execute the command
 case "${cur_command}" in
   init)
@@ -225,9 +244,9 @@ case "${cur_command}" in
  project or 'resume' to attach to screen session"
       exit 0
     elif is_set $P_PRESENT; then
-      echo "[${cur_project}] was already created. However; it is neot active.\
- Either first 'kill' then 'init' for a new project, or 'resume' to attach\
- a new screen session. In all cases, the project history file will be recovered, but\
+      echo "[${cur_project}] was already created. However; it is neither active\
+ nor saved. Either first 'kill' then 'init' for a new project, or 'resume' to attach
+ a new screen session. In all cases, the project history file will be recovered, but
  last state is lost."
       exit 0
     elif is_set $P_ACTIVE && is_not_set $P_PRESENT; then
@@ -244,7 +263,7 @@ case "${cur_command}" in
       esac
     else
       protect "${cur_project_file}" "${cur_project_path}"
-      set_history_and_new_screen ${cur_project} "${cur_project_path}"
+      set_history_and_new_screen ${cur_project} "${cur_project_path}" "${cur_layout_file}"
     fi
   ;;
   resume)
@@ -264,23 +283,29 @@ case "${cur_command}" in
   ;;
   info)
     get_all_projects
-    print_headers
+    [ -n "${cur_project}" ] && print_headers
     print_project_info "${cur_project}"
     exit 0
   ;;
   kill)
-    read -r -p "Are you sure that you want to kill [${cur_project}]? This\
+    if is_set $P_PRESENT; then
+      read -r -p "Are you sure that you want to kill [${cur_project}]? This\
  will remove all locks, saved states; only history files will remain.\
  [y/N] " response
-    case $response in
-      [yY][eE][sS]|[yY])
-        rm -f ${cur_project_file}
-        screen -X -S ${cur_project} quit
-      ;;
-      *)
-        exit 0
-      ;;
-    esac
+      case $response in
+        [yY][eE][sS]|[yY])
+          rm -f ${cur_project_file}
+          if is_set $P_ACTIVE; then
+            screen -X -S ${cur_project} quit
+          fi
+        ;;
+        *)
+          exit 0
+        ;;
+      esac
+    else
+      echo "[${cur_project}] does not exist. Nothing to kill for now."
+    fi
   ;;
   list)
     get_all_projects

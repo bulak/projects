@@ -1,0 +1,4 @@
+rename-window monitor 
+split-window -v -p 100 htop
+split-window -v -p 70 nano
+split-window -h bash

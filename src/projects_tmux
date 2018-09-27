@@ -2,22 +2,6 @@
 
 # projects - tmux based -
 
-# TODO (fir init_layouts)
-#
-# - get rid of 'save' and tmuxp dependency :OK:
-# - figure out starting a session with a predefined layout/commands
-# - this is possible for screen - and we already ditched 'save' there
-# - the idea is to have different predefined project layouts to choose from
-# - 'save' is not working well anyways. For our purpopses, saving is not
-#   really useful. Getting the layouts from an interrupted R session does not
-#   help!
-
-# for example:
-# projects init project_name [project_type]
-# user@host:~/some/dir/to/cool_stuff$ project init cool_stuff sequencing
-# if project_type is not provided then look for layout named default
-# if not present just call tmux otherwise call with default layout
-
 :<<'LICENSE'
 MIT License
 
@@ -78,10 +62,13 @@ $(version)
 
 $DESCR
 
-Usage: $0 COMMAND [PROJECT_NAME]
+Usage: $0 COMMAND [PROJECT_NAME] [LAYOUT]
 
 COMMAND        Mandatory. Has to be one of:
-               init   : Initiates a new project with PROJECT_NAME
+               init   : Initiates a new project with PROJECT_NAME. If LAYOUT is
+                        given, it will be used to load a layout configuration.
+                        If LAYOUT is empty, a 'default' layout config will be
+                        used, provided that it exists. 
                resume : Resumes the project PROJECT_NAME
                info   : Prints information about the project PROJECT_NAME
                kill   : Kills the project PROJECT NAME
@@ -90,6 +77,9 @@ COMMAND        Mandatory. Has to be one of:
                version: Prints the version of the program
 
 PROJECT_NAME   Name of the project, spaces are NOT allowed.
+LAYOUT         Name of a layout configuration, spaces are NOT allowed. The
+               full path of the correspoding configuration file will be
+               ${LAYOUT_HOME}/<LAYOUT>${LAYOUT_EXT}
 
 EOF
   exit 1
