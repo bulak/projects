@@ -4,7 +4,7 @@ def_install_path="~/.local/bin"
 def_bashrc_path="~/.bashrc_projects"
 
 # do we have these?
-cmds=( "pip" "screen" "tmux" "tmuxp" "whiptail" "dialog"
+cmds=( "pip" "screen" "tmux" "whiptail" "dialog"
        "flock" "lockfile" "jrnl" )
 declare -A have_cmd=()
 for cmd in ${cmds[@]}; do
@@ -101,11 +101,11 @@ opt_str=( "ehist" "phist" "jrnl" "autocompl" )
 title="Which options should be enabled?"
 options=("1" "Eternal bash history" "on" 
          "2" "Project bash history" "on" 
-         "3" "Project journaling" "off" 
-         "4" "Autocompletion for 'projects'" "off")
+         "3" "Project journaling (req. jrnl)" "off" 
+         "4" "Bash-completion for 'projects'" "off")
 case ${dialog} in
   whiptail)
-    optional=($(whiptail --checklist "${title}" 12 47 4 "${options[@]}" 3>&2 2>&1 1>&3))
+    optional=($(whiptail --checklist "${title}" 12 50 4 "${options[@]}" 3>&2 2>&1 1>&3))
     ;;
   dialog)
     optional=($(dialog --checklist "${title}" 12 50 8 "${options[@]}" 3>&1 1>&2 2>&3 3>&-))
@@ -130,11 +130,7 @@ bashrc_file="./bashrc_temp_preinstall"
 # tmux or screen
 case ${multplexer} in
   tmux)
-    quit_if_not "tmuxp" "You have selected 'tmux' as the multiplexer to be used\
- with 'projects'. This requires 'tmuxp'; however, I couldn't find it. You can\
- install it by 'pip install [--user] tmuxp'. The installation will terminate."
-    install_script="${install_script} install -D ./src/projects_tmux ${install_path}/projects;\
- cp ./src/project.yaml ~/.tmuxp/;"
+    install_script="${install_script} install -D ./src/projects_tmux ${install_path}/projects;"
   ;;
   screen)
     install_script="${install_script} install -D ./src/projects_screen ${install_path}/projects;"
@@ -142,6 +138,7 @@ case ${multplexer} in
   *)
     echo "Error: Multiplexer selected could be one of following: tmux, screen."
     quit
+  ;;
 esac
 echo -e "\n\n# PROJECTS modifications -- $(date +"%Y-%m-%d")" > ${bashrc_file}
 cat ./src/bashrc >> ${bashrc_file}
@@ -220,3 +217,4 @@ echo "# -----------------------------" >> ${bashrc_file}
 
 # installation
 eval "${install_script}"
+[ $? -eq 0 ] && echo "Installation successfully finished."

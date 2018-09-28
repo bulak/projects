@@ -19,3 +19,6 @@ git clone https://github.com/bulak/projects.git
 cd projects
 ./install.sh
 ```
+
+## Basic Usage
+
