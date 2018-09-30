@@ -73,30 +73,23 @@ several `bash` functions will become available:
 
 ### Inside a project
 
-  - `phist` project history, is available within a project and displays
-    the eternal history of that project only. In addition to time and
-    path stamps of `ehist`, it also lists the pane# of the multiplexer
-    session where the command has been executed.
+  - `phist` project history, is available within a project and displays the eternal history of that project only. In addition to time and path stamps of `ehist`, it also lists the pane# of the `tmux` (not implemented for `screen` yet) session where the command has been executed.
 
 ![phist](https://raw.githubusercontent.com/bulak/projects/fdd17f319424adbf76c36a3c03255ded770ed1e8/phist_screenshot.png)
 
-  - `pnote` is available only within a project and similar to `hnote`
-    produces a note within the project's eternal history. The note will
-    only be available in that project and not in global eternal history.
+  - `pnote` is available only within a project and similar to `hnote` produces a note within the project's eternal history. The note will only be available in that project and not in global eternal history.
 
 If *journaling* option was selected during install, additional commands
 will be available from within a project:
 
-  - `add_jrnl` and `pj` are available if journaling option is selected
-    during installation. These commands depend on `jrnl` package
-    (python, link).
+  - `add_jrnl` and `pj` are available if journaling option is selected during installation. These commands depend on `jrnl` [package](https://pypi.org/project/jrnl "jrnl pypi").
 
     `add_jrnl` adds a project-specific journal to user's journal database.
 
-    `pj` is an alias for `jrnl ${PROJECT_NAME}`` which simply enables
+    `pj` is an alias for `jrnl ${PROJECT_NAME}` which simply enables
     viewing and editing of project specific notes. Basic usage:
 
-For further functionality of `jrnl` check out ....
+For further functionality of `jrnl` check out [their website](http://jrnl.sh/ "jrnl").
 
 ### Terminating a project
 
@@ -137,7 +130,9 @@ is resumed after its multiplexer session is terminated, it will not be
 used again. This could be feature that can be implemented in future.
 
 Look at these resources for further ideas about how to write layout
-files: refs...
+files:
+- [How to set up tmux so that it starts up with specified windows opened?](https://stackoverflow.com/questions/5609192/how-to-set-up-tmux-so-that-it-starts-up-with-specified-windows-opened "SO: question 5609192")
+- [gnu screen layout sample](https://gist.github.com/ihiroky/5794569 "ihiroky/screen-layout.default")
 
 ### Files and directories
 
