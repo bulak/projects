@@ -22,7 +22,7 @@ cd projects
 
 ## How to use
 
-- ehist
+- phist
 
-![ehist](https://raw.githubusercontent.com/bulak/projects/fdd17f319424adbf76c36a3c03255ded770ed1e8/ehist_screenshot.png)
+![phist](https://raw.githubusercontent.com/bulak/projects/fdd17f319424adbf76c36a3c03255ded770ed1e8/phist_screenshot.png)
 
