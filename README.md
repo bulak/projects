@@ -100,7 +100,7 @@ For further functionality of `jrnl` check out ....
 
 ### Terminating a project
 
-|projects kill PROJECT_NAME|
+`projects kill PROJECT_NAME`
 
 ### Listing projects
 
@@ -133,11 +133,9 @@ files: refs...
 
 | Default path | Explanation |
 | --- | --- |
-| ~/.local/bin/projects | main bash script, 'tmux' or 'screen' support is
-selected during installation |
+| ~/.local/bin/projects | main bash script, 'tmux' or 'screen' support is selected during installation |
 | ~/.bashrc_projects | sourced by ~.bashrc and provides all bash functions |
-| ~/.local/bin/add_jrnl | /optional/ python script for project specific
-journaling |
+| ~/.local/bin/add_jrnl | /optional/ python script for project specific journaling |
 | ~/.projects/ | main path where all projects' data and lock files are stored |
 | ~/.projects/layouts/ | layout directory |
 | ~/.history/ | eternal history directory for both global and project specific command histories |
