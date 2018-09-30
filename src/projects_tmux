@@ -28,7 +28,7 @@ LICENSE
 
 # Constants
 DESCR="\"projects\" is a simple shell script that manages tmux based projects"
-VERSION="3.3"
+VERSION="3.4"
 
 PROJECTS_HOME="${HOME}/.projects"
 PROJECT_EXT=".project"
