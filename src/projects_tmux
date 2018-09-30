@@ -127,9 +127,10 @@ declare -A date_accessed=()
 declare -a all_projects=()
 get_all_projects() {
   local prodat
+  local project_ext="\\${PROJECT_EXT}"
   read -r -a prodat <<< $(find ${PROJECTS_HOME} -type f \
     -name *${PROJECT_EXT} -printf "%f %TY-%Tm-%Td\n" \
-    | sed "s/${PROJECT_EXT}//g" | sort -k2r | tr '\n' ' ')
+    | sed "s/${project_ext}//g" | sort -k2r | tr '\n' ' ')
   for ((i=0;i<${#prodat[@]};i=i+2)); do
     j=$((i + 1))
     all_projects+=(${prodat[${i}]})

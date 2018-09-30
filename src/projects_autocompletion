@@ -24,8 +24,9 @@ _projects()
 		    fi
 	    ;;
 	    resume|info|kill)
+            local project_ext="\\${PROJECT_EXT}"
     		local projects=$(find ${PROJECTS_HOME} -type f -name *${PROJECT_EXT} \
-               -printf "%f " | sed "s/${PROJECT_EXT}//g")
+               -printf "%f " | sed "s/${project_ext}//g")
     		COMPREPLY=( $( compgen -W "${projects}" -- "${cur}" ) )
     	;;
     esac
