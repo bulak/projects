@@ -121,7 +121,7 @@ name that depends on the multiplexer used:
 extensions to `.tmuxrc` or `.screenrc` where splitting, default commands
 etc can be organized.
 
-![ehist](https://raw.githubusercontent.com/bulak/projects//ehist_screenshot.png)
+![ehist](https://raw.githubusercontent.com/bulak/projects/49cc253851c397f594e51c899a489f3f0c9708f7/ehist_screenshot.png)
 
 The layout file is only used once during initialization and if a project
 is resumed after its multiplexer session is terminated, it will not be
