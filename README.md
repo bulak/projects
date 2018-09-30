@@ -68,7 +68,7 @@ several `bash` functions will become available:
 :~$ hnote "This is just a note for myself"
 :~$ ehist
 ```
-...
+
 ![ehist](https://raw.githubusercontent.com/bulak/projects/77098adf2f813c47c948920adc945dc07f7af814/ehist_screenshot.png)
 
 ### Inside a project
@@ -106,7 +106,6 @@ For further functionality of `jrnl` check out ....
 
 `projects list` `projects info PROJECT_NAME`
 
-
 ### Layouts
 
 When a project is initiated, an additional LAYOUT argument can be
@@ -121,6 +120,8 @@ name that depends on the multiplexer used:
 `monitor.(tmux|screen).layout`. The layout files are basically
 extensions to `.tmuxrc` or `.screenrc` where splitting, default commands
 etc can be organized.
+
+![ehist](https://raw.githubusercontent.com/bulak/projects//ehist_screenshot.png)
 
 The layout file is only used once during initialization and if a project
 is resumed after its multiplexer session is terminated, it will not be
