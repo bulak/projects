@@ -112,16 +112,25 @@ When a project is initiated, an additional LAYOUT argument can be
 supplied to the `init` command:
 
 ```bash
-:~/path/to/my_project$ projects init WebMonitor monitor
+:~/path/to/my_project$ projects init DevProject dev_env
 ```
 
 This would look for a layout file under `~/.projects/layouts/` with a
 name that depends on the multiplexer used:
-`monitor.(tmux|screen).layout`. The layout files are basically
+`dev_env.(tmux|screen).layout`. The layout files are basically
 extensions to `.tmuxrc` or `.screenrc` where splitting, default commands
 etc can be organized.
 
-![ehist](https://raw.githubusercontent.com/bulak/projects/49cc253851c397f594e51c899a489f3f0c9708f7/layout_screenshot.png)
+![ehist](https://raw.githubusercontent.com/bulak/projects/eb8d57f55319f52b9b1d22c18c80981752454ea6/layout_screenshot.png)
+
+The layout file (`dev_env.tmux.layout`) in this example is:
+
+```bash
+rename-window monitor 
+split-window -v -p 100 htop
+split-window -v -p 70 vim some_code.sh
+split-window -h -p 60 bash
+```
 
 The layout file is only used once during initialization and if a project
 is resumed after its multiplexer session is terminated, it will not be
