@@ -69,7 +69,7 @@ several `bash` functions will become available:
 :~$ ehist
 ```
 ...
-![ehist](https://raw.githubusercontent.com/bulak/projects//ehist_screenshot.png)
+![ehist](https://raw.githubusercontent.com/bulak/projects/77098adf2f813c47c948920adc945dc07f7af814/ehist_screenshot.png)
 
 ### Inside a project
 
