@@ -19,3 +19,10 @@ git clone https://github.com/bulak/projects.git
 cd projects
 ./install.sh
 ```
+
+## How to use
+
+- ehist
+
+![ehist](https://raw.githubusercontent.com/bulak/projects/fdd17f319424adbf76c36a3c03255ded770ed1e8/ehist_screenshot.png)
+
