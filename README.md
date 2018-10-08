@@ -65,7 +65,7 @@ several `bash` functions will become available:
     used for locating, parsing etc:
 
 ```bash
-:~$ hnote "This is just a note for myself"
+:~$ hnote "Screenshot for REAME.md is taken from these lines"
 :~$ ehist
 ```
 

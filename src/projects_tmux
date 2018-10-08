@@ -196,9 +196,9 @@ set_history_and_new_tmux() {
   export PROMPT_COMMAND='echo -ne "\033]0;[ ${PROJECT_NAME} ]@${HOSTNAME}\007"'
   [ -n "$2" ] && cd "$2" && export PROJECT_HOME="$2"
   if [ -z "$3" ]; then
-    tmux new-session -s $1
+    tmux new-session -s $1 \; set-option -ga update-environment ' PROJECT_HOME PROJECT_NAME PROMPT_COMMAND'
   else
-    tmux new-session -s $1 "tmux source-file ${3}"
+    tmux new-session -s $1 \; set-option -ga update-environment ' PROJECT_HOME PROJECT_NAME PROMPT_COMMAND' \; source-file "${3}"
   fi
   exit 0
 }
