@@ -5,7 +5,7 @@ def_bashrc_path="~/.bashrc_projects"
 
 # do we have these?
 cmds=( "pip" "screen" "tmux" "whiptail" "dialog"
-       "flock" "lockfile" "jrnl" )
+       "flock" "lockfile" "jrnl" "emacs" )
 declare -A have_cmd=()
 for cmd in ${cmds[@]}; do
   command -v ${cmd} >/dev/null 2>&1 && have_cmd[${cmd}]=true
@@ -97,12 +97,13 @@ esac
 multplexer=${opt_str[$((multplexer - 1))]}
 
 # Options
-opt_str=( "ehist" "phist" "jrnl" "autocompl" )
+opt_str=( "ehist" "phist" "jrnl" "org" "autocompl" )
 title="Which options should be enabled?"
 options=("1" "Eternal bash history" "on" 
          "2" "Project bash history" "on" 
-         "3" "Project journaling (req. jrnl)" "off" 
-         "4" "Bash-completion for 'projects'" "off")
+         "3" "Project journaling (req. jrnl)" "off"
+	 "4" "Project journaling (req. emacs)" "off"
+         "5" "Bash-completion for 'projects'" "off")
 case ${dialog} in
   whiptail)
     optional=($(whiptail --checklist "${title}" 12 50 4 "${options[@]}" 3>&2 2>&1 1>&3))
@@ -159,7 +160,7 @@ if contains "${option_str}" "autocompl"; then
   cat ./src/bashrc_autocompletion >> ${bashrc_file}
 fi
 
-# Is journaling requested?
+# Is journaling requested (jrnl)?
 if contains "${option_str}" "jrnl"; then
   quit_if_not "jrnl" "You have selected the 'Project journaling'. This option\
  depends on 'jrnl'; however, I couldn't find it. You can install it by 'pip\
@@ -167,6 +168,15 @@ if contains "${option_str}" "jrnl"; then
  or install 'jrnl' first."
  install_script="${install_script} install -D ./src/add_jrnl.py ${install_path}/add_jrnl;"
  cat ./src/bashrc_journaling >> ${bashrc_file}
+fi
+
+# Is journaling requested (emacs ORG)?
+if contains "${option_str}" "org"; then
+# warn_if_not "emacs" "You have selected the 'Projects journaling (emacs). This\
+# option depends on 'emacs'; however, I couldn't find it. To use this feature,\
+# Emacs with ORG mode needs to be installed."
+ install_script="${install_script} install -D ./src/add_note.sh ${install_path}/add_note;"
+ cat ./src/bashrc_org_journal >> ${bashrc_file}
 fi
 
 # Is eternal history for bash requested?

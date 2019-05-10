@@ -1,0 +1,4 @@
+
+# projects Emacs ORG journaling
+# ------------------
+[ ! -z "${PROJECT_NAME}" ] && export ORG_BOOK="${PROJECT_HOME}/${PROJECT_NAME}_journal.org"
