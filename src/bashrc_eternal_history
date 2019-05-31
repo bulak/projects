@@ -11,12 +11,14 @@ hnote () {
 }
 
 ehist () {
-  cat ${ETERNALHISTFILE} | awk 'BEGIN {
-    FS="]"; OFS="]" } {
+  cat ${ETERNALHISTFILE} | awk LC_ALL=C 'BEGIN {
+    FS="]"; OFS="" } {
         n = index( $2, ";" );
+	date = $1;
         subdir = substr( $2, 1, n-1 );
         cmd = substr( $2, n+1 );
-        print "\033[34m"$1,"\033[32m"subdir"\033[0m"cmd;}'
+	$1=$2="";
+        print "\033[34m"date"]""\033[32m"subdir"\033[0m"cmd$0;}'
 }
 
 # This is from https://github.com/rcaloras/bash-preexec
