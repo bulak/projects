@@ -35,7 +35,9 @@ PROJECT_EXT=".project"
 LAYOUT_HOME="${PROJECTS_HOME}/layouts"
 LAYOUT_EXT=".screen.layout"
 HEADER_FORMAT='%-20s%-12s%-10s%-7s\n'
-ROW_FORMAT='\e[1m%-20s\e[0m%-12s%-10s\e[1m%7s\e[0m\n'
+FHEADER_FORMAT='%-20s%-12s%-10s%-9s%s\n'
+ROW_FORMAT='\e[1m%-20s\e[0m%-12s%-10s\e[1m%-7s\e[0m\n'
+FROW_FORMAT='\e[1m%-20s\e[0m%-12s%-10s\e[1m%-9s\e[0m%s\n'
 P_PRESENT=1
 P_ACTIVE=2
 # P_FUTURE_ATTR=4
@@ -65,16 +67,17 @@ $DESCR
 Usage: $0 COMMAND [PROJECT_NAME] [LAYOUT]
 
 COMMAND        Mandatory. Has to be one of:
-               init   : Initiates a new project with PROJECT_NAME. If LAYOUT is
-                        given, it will be used to load a layout configuration.
-                        If LAYOUT is empty, a 'default' layout config will be
-                        used, provided that it exists. 
-               resume : Resumes the project PROJECT_NAME
-               info   : Prints information about the project PROJECT_NAME
-               kill   : Kills the project PROJECT NAME
-               list   : Lists all projects sorted by last accession dates
-               help   : Prints this info
-               version: Prints the version of the program
+               init|ini    : Initiates a new project with PROJECT_NAME.
+ 	       		     If LAYOUT is given, it will be used to load a
+			     layout configuration. If LAYOUT is empty, a
+			     'default' layout config will be used, provided that
+			     it exists. 
+               resume|res  : Resumes the project PROJECT_NAME
+               info        : Prints information about the project PROJECT_NAME
+               kill        : Kills the project PROJECT NAME
+               list|ls     : Lists all projects sorted by last accession dates
+               help        : Prints this info
+               version|ver : Prints the version of the program
 
 PROJECT_NAME   Name of the project, spaces are NOT allowed.
 LAYOUT         Name of a layout configuration, spaces are NOT allowed. The
@@ -177,6 +180,11 @@ print_headers() {
     printf ${HEADER_FORMAT} "-------" "-------" "--------" " ------"
 }
 
+print_full_headers() {
+    printf ${FHEADER_FORMAT} "Project" "Created" "Accessed" " Active" "Path"
+    printf ${FHEADER_FORMAT} "-------" "-------" "--------" " ------" "----"
+}
+
 print_project_info() {
   local project_name=$1
   #local checkmark="...\xe2\x9c\x93"
@@ -187,8 +195,12 @@ print_project_info() {
   local is_created="${date_created[${project_name}]}"
   local is_accessed="${date_accessed[${project_name}]}"
   [ -z ${is_created} ] && is_created=" --"
-  is_set "${P_ACTIVE}" && is_active="${checkmark}  " || is_active=" "
-  printf ${ROW_FORMAT} "${project_name}" "${is_created}" "${is_accessed}" "${is_active}"
+  is_set "${P_ACTIVE}" && is_active="   ${checkmark}" || is_active=" "
+  if [ ! -z "$2" ]; then
+      printf ${FROW_FORMAT} "${project_name}" "${is_created}" "${is_accessed}" "${is_active}" "${cur_project_path}"
+  else
+      printf ${ROW_FORMAT} "${project_name}" "${is_created}" "${is_accessed}" "${is_active}"
+  fi
 }
 
 set_history_and_new_screen() {
@@ -239,7 +251,7 @@ cur_layout_file="${LAYOUT_HOME}/${cur_layout}${LAYOUT_EXT}"
 
 # Execute the command
 case "${cur_command}" in
-  init)
+  init|ini)
     if is_set $P_PRESENT && is_set $P_ACTIVE; then
       echo "[${cur_project}] was already created and is active. Either 'kill' this\
  project or 'resume' to attach to screen session"
@@ -267,7 +279,7 @@ case "${cur_command}" in
       set_history_and_new_screen ${cur_project} "${cur_project_path}" "${cur_layout_file}"
     fi
   ;;
-  resume)
+  resume|res)
     if is_set $P_PRESENT && is_set $P_ACTIVE; then
       touch -m ${cur_project_file} && \
       set_history_and_attach_screen ${cur_project} "${cur_project_path}"
@@ -284,8 +296,8 @@ case "${cur_command}" in
   ;;
   info)
     get_all_projects
-    [ -n "${cur_project}" ] && print_headers
-    print_project_info "${cur_project}"
+    [ -n "${cur_project}" ] && print_full_headers
+    print_project_info "${cur_project}" full
     exit 0
   ;;
   kill)
@@ -308,7 +320,7 @@ case "${cur_command}" in
       echo "[${cur_project}] does not exist. Nothing to kill for now."
     fi
   ;;
-  list)
+  list|ls)
     get_all_projects
     print_headers
     for key in "${all_projects[@]}"; do
@@ -319,7 +331,7 @@ case "${cur_command}" in
     usage
     exit 0
   ;;
-  version)
+  version|ver)
     version
     exit 0
   ;;
