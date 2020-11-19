@@ -61,7 +61,7 @@ done
 [ -z "${message}" ] && read -r -p "> " message
 tag_str=$(join_tags "${tags[@]}")
 cat >&$output << EOL
-$(printf "%-25s %55s" "${title}${timestamp}" :${tag_str}:)
+$(printf "%-25s %54s" "${title}${timestamp}" :${tag_str}:)
 
 $(echo "${message}" | fold -s -w80)
 
