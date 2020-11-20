@@ -41,7 +41,7 @@ the project path even if the session was quitted.
 
 ### To resume/attach to a project
 
-From anywhere, call `resume`  with project's name:
+From anywhere, call `resume` or `res` with project's name:
 
 ```bash
 :~/some/directory/$ projects resume MyProject
@@ -79,10 +79,14 @@ several `bash` functions will become available:
 
   - `pnote` is available only within a project and similar to `hnote` produces a note within the project's eternal history. The note will only be available in that project and not in global eternal history.
 
-If *journaling* option was selected during install, additional commands
-will be available from within a project:
+If any of the two *journaling* options was selected during install, additional commands
+will be available from within a project. `emacs` option relies on the Org mode of `emacs`. This
+option enables
 
-  - `add_jrnl` and `pj` are available if journaling option is selected during installation. These commands depend on `jrnl` [package](https://pypi.org/project/jrnl "jrnl pypi").
+  - `add_note` which is a small `bash` script that directly appends to default project specific journal. The full path of 
+  the journal is kept under `ORG_BOOK` environmental variable and defaults to project's main path + project name + ".org". `add_note` takes one argument, `--tag` or `-t`, which is used as a headline tag within the Org mode. By default all lines are hardwrapped at 80 characters.
+  
+The alternative (can be also used simultaniously) journaling is `jrnl` based. `add_jrnl` and `pj` are available if `jrnl` based journaling option is selected during installation. These commands depend on `jrnl` [package](https://pypi.org/project/jrnl "jrnl pypi").
 
     `add_jrnl` adds a project-specific journal to user's journal database.
 
