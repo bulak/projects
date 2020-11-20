@@ -88,10 +88,15 @@ option enables
   
 The alternative (can be also used simultaniously) journaling is `jrnl` based. `add_jrnl` and `pj` are available if `jrnl` based journaling option is selected during installation. These commands depend on `jrnl` [package](https://pypi.org/project/jrnl "jrnl pypi").
 
-    `add_jrnl` adds a project-specific journal to user's journal database.
+  - `add_jrnl` adds a project-specific journal to user's journal database.
 
-    `pj` is an alias for `jrnl ${PROJECT_NAME}` which simply enables
+  - `pj` is an alias for `jrnl ${PROJECT_NAME}` which simply enables
     viewing and editing of project specific notes. Basic usage:
+
+```bash
+:~$ jrnl today: "Implemented a new journaling that is compatible with Emacs' @Org mode."
+:~$ jrnl --tags
+```
 
 For further functionality of `jrnl` check out [their website](http://jrnl.sh/ "jrnl").
 
